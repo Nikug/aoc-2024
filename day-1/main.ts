@@ -16,7 +16,6 @@ const readFile = (filename: string): [number[], number[]] => {
 };
 
 const main = () => {
-  console.log(process.argv);
   const [left, right] = readFile(process.argv[2] ?? "test.txt");
   left.sort();
   right.sort();
@@ -31,4 +30,22 @@ const main = () => {
   console.log(result);
 };
 
-main();
+const main2 = () => {
+  const [left, right] = readFile(process.argv[2] ?? "test.txt");
+
+  const rightDict: Record<number, number> = {};
+  right.forEach((value) => {
+    if (rightDict[value]) rightDict[value] += 1;
+    else rightDict[value] = 1;
+  });
+
+  const result = left.reduce((acc, value) => {
+    const appearanceCount = rightDict[value] ?? 0;
+    acc += value * appearanceCount;
+    return acc;
+  }, 0);
+
+  console.log(result);
+};
+
+main2();
