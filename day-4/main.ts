@@ -14,8 +14,8 @@ const stepper = (input: string[], target: string) => {
   // Horizontal
   for (let y = 0; y < input.length; ++y) {
     for (let x = 0; x < input[y].length; ++x) {
-      checker.read(input[y][x]);
-      reverseChecker.read(input[y][x]);
+      checker.read(input[y][x], x, y);
+      reverseChecker.read(input[y][x], x, y);
     }
 
     checker.clearBuffer();
@@ -25,8 +25,8 @@ const stepper = (input: string[], target: string) => {
   // Vertical
   for (let x = 0; x < input[0].length; ++x) {
     for (let y = 0; y < input.length; ++y) {
-      checker.read(input[y][x]);
-      reverseChecker.read(input[y][x]);
+      checker.read(input[y][x], x, y);
+      reverseChecker.read(input[y][x], x, y);
     }
 
     checker.clearBuffer();
@@ -42,8 +42,8 @@ const stepper = (input: string[], target: string) => {
     let x = Math.max(0, start - height + 1);
     let y = Math.max(0, height - start - 1);
     while (x < width && y < height) {
-      checker.read(input[y][x]);
-      reverseChecker.read(input[y][x]);
+      checker.read(input[y][x], x, y);
+      reverseChecker.read(input[y][x], x, y);
       x++;
       y++;
     }
@@ -56,8 +56,8 @@ const stepper = (input: string[], target: string) => {
     let x = Math.max(0, width - start - 1);
     let y = Math.min(height - 1, allStarts - start - 1);
     while (x < width && y >= 0) {
-      checker.read(input[y][x]);
-      reverseChecker.read(input[y][x]);
+      checker.read(input[y][x], x, y);
+      reverseChecker.read(input[y][x], x, y);
       x++;
       y--;
     }
