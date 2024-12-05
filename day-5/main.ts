@@ -45,10 +45,40 @@ const checkOrder = (rules: Record<number, number[]>, page: number[]) => {
   return true;
 };
 
+const fixOrder = (rules: Record<number, number[]>, page: number[]) => {
+  while (!checkOrder(rules, page)) {
+    for (let i = 0; i < page.length; ++i) {
+      const rule = rules[page[i]];
+      if (!rule) continue;
+
+      for (const ruleNumber of rule) {
+        for (let j = 0; j < i; ++j) {
+          if (page[j] === ruleNumber) {
+            const temp = page[i];
+            page[i] = page[j];
+            page[j] = temp;
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  return page;
+};
+
 const main = () => {
   const { orderRules, pages } = readFile(process.argv[2]);
-  const validPages = pages.filter((page) => checkOrder(orderRules, page));
-  const result = validPages.reduce(
+  // const validPages = pages.filter((page) => checkOrder(orderRules, page));
+  // const result = validPages.reduce(
+  //   (acc, page) => acc + page[Math.floor(page.length / 2)],
+  //   0,
+  // );
+  // console.log(result);
+
+  const invalidPages = pages.filter((page) => !checkOrder(orderRules, page));
+  const fixedPages = invalidPages.map((page) => fixOrder(orderRules, page));
+  const result = fixedPages.reduce(
     (acc, page) => acc + page[Math.floor(page.length / 2)],
     0,
   );
