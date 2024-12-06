@@ -85,7 +85,7 @@ const guard = (map: string[], startPoint: [number, number]) => {
       break;
     }
 
-    if (map[potentialNextPoint[1]][potentialNextPoint[0]] === "#") {
+    while (map[potentialNextPoint[1]][potentialNextPoint[0]] === "#") {
       direction = nextDirection(direction);
       potentialNextPoint = add(nextPoint, direction);
     }
@@ -103,13 +103,12 @@ const logMap = (map: string[]) => {
 
 const guard2 = (map: string[], startPoint: [number, number]) => {
   const visited = new Set<string>();
-  visited.add(hashWithDirection(startPoint, directions.up));
   const pointsToCheck: { pos: [number, number]; dir: [number, number] }[] = [];
   pointsToCheck.push({ pos: startPoint, dir: directions.up });
 
   let direction = directions.up;
+  let nextPoint = startPoint;
 
-  let nextPoint = add(startPoint, direction);
   while (true) {
     visited.add(hashWithDirection(nextPoint, direction));
     pointsToCheck.push({ pos: nextPoint, dir: direction });
@@ -134,7 +133,7 @@ const guard2 = (map: string[], startPoint: [number, number]) => {
 
   let results: Record<string, [number, number]> = {};
   for (const point of pointsToCheck) {
-    const obstructionPosition = add(point.pos, point.dir);
+    const obstructionPosition = point.pos;
     if (equals(obstructionPosition, startPoint)) {
       continue;
     }
@@ -153,8 +152,7 @@ const guard2 = (map: string[], startPoint: [number, number]) => {
     }
 
     const newMap = addObstruction(map, obstructionPosition);
-    const newDirection = nextDirection(point.dir);
-    const hasLoop = checkForLoop(newMap, point.pos, newDirection);
+    const hasLoop = checkForLoop(newMap, startPoint, directions.up);
     if (hasLoop) {
       // logMap(newMap);
       results[hash(obstructionPosition)] = obstructionPosition;
@@ -183,11 +181,10 @@ const checkForLoop = (
   startDirection: [number, number],
 ) => {
   const visited = new Set<string>();
-  visited.add(hashWithDirection(startPoint, startDirection));
 
   let direction = startDirection;
+  let nextPoint = startPoint;
 
-  let nextPoint = add(startPoint, direction);
   while (true) {
     const nextHash = hashWithDirection(nextPoint, direction);
     if (visited.has(nextHash)) {
@@ -206,7 +203,7 @@ const checkForLoop = (
       return false;
     }
 
-    if (map[potentialNextPoint[1]][potentialNextPoint[0]] === "#") {
+    while (map[potentialNextPoint[1]][potentialNextPoint[0]] === "#") {
       direction = nextDirection(direction);
       potentialNextPoint = add(nextPoint, direction);
     }
@@ -218,6 +215,8 @@ const checkForLoop = (
 const main = () => {
   const map = readFile(process.argv[2]);
   const startPoint = getStartPoint(map);
+  // const result = guard(map, startPoint);
+  // console.log(result.size);
   const loops = guard2(map, startPoint);
   // console.log(loops);
   console.log(loops.length);
