@@ -34,6 +34,13 @@ const reduceEquation = (equation: Equation, operator: string) => {
       copy.values = [copy.values[0] * copy.values[1], ...copy.values.slice(2)];
       copy.operators = [...copy.operators, "*"];
       break;
+    case "||":
+      copy.values = [
+        parseInt(`${copy.values[0]}${copy.values[1]}`),
+        ...copy.values.slice(2),
+      ];
+      copy.operators = [...copy.operators, "||"];
+      break;
     default:
       throw new Error("Invalid operator");
   }
@@ -45,6 +52,7 @@ const checkEquation = (equation: Equation): Equation | null => {
   const operations: { equation: Equation; operator: string }[] = [];
   operations.push({ equation, operator: "*" });
   operations.push({ equation, operator: "+" });
+  operations.push({ equation, operator: "||" });
   while (operations.length > 0) {
     const operation = operations.pop()!;
     const newEquation = reduceEquation(operation.equation, operation.operator);
@@ -67,6 +75,7 @@ const checkEquation = (equation: Equation): Equation | null => {
 
     operations.push({ equation: newEquation, operator: "*" });
     operations.push({ equation: newEquation, operator: "+" });
+    operations.push({ equation: newEquation, operator: "||" });
   }
 
   return null;
@@ -82,6 +91,7 @@ const main = () => {
     return acc;
   }, 0);
 
+  console.log("valid equations", results.length);
   console.log(result);
 };
 
