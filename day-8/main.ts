@@ -40,6 +40,19 @@ const equal = (
   return vector[0] === vector2[0] && vector[1] === vector2[1];
 };
 
+const isInBounds = (
+  position: [number, number],
+  width: number,
+  height: number,
+) => {
+  return (
+    position[0] >= 0 &&
+    position[0] < width &&
+    position[1] >= 0 &&
+    position[1] < height
+  );
+};
+
 const logMap = (
   width: number,
   height: number,
@@ -89,28 +102,67 @@ const calculateAntinodes = (antenna: string, positions: [number, number][]) => {
   return antinodes;
 };
 
+const calculateHarmonicAntinodes = (
+  antenna: string,
+  positions: [number, number][],
+  width: number,
+  height: number,
+) => {
+  const antinodes: Record<string, [number, number][]> = { [antenna]: [] };
+  for (let i = 0; i < positions.length - 1; ++i) {
+    for (let j = i + 1; j < positions.length; ++j) {
+      const difference = sub(positions[i], positions[j]);
+      let node1 = positions[i];
+      while (isInBounds(node1, width, height)) {
+        antinodes[antenna].push(node1);
+        node1 = add(node1, difference);
+      }
+
+      let node2 = positions[j];
+      while (isInBounds(node2, width, height)) {
+        antinodes[antenna].push(node2);
+        node2 = sub(node2, difference);
+      }
+    }
+  }
+
+  return antinodes;
+};
+
 const main = () => {
   const { width, height, antennas } = readFile(process.argv[2]);
+  // const antinodes = Object.entries(antennas)
+  //   .map(([antenna, positions]) => calculateAntinodes(antenna, positions))
+  //   .reduce((acc, antinodes) => Object.assign(acc, antinodes), {});
+  // // logMap(width, height, antennas, antinodes);
+  //
+  // const validAndUniqueAntinodes = new Set<string>();
+  // Object.values(antinodes)
+  //   .flatMap((antinodes) => antinodes)
+  //   .filter((position) => {
+  //     if (
+  //       position[0] < 0 ||
+  //       position[0] >= width ||
+  //       position[1] < 0 ||
+  //       position[1] >= height
+  //     )
+  //       return false;
+  //     return true;
+  //   })
+  //   .forEach((position) => validAndUniqueAntinodes.add(position.join(",")));
+  //
+  // console.log(validAndUniqueAntinodes.size);
+
   const antinodes = Object.entries(antennas)
-    .map(([antenna, positions]) => calculateAntinodes(antenna, positions))
+    .map(([antenna, positions]) =>
+      calculateHarmonicAntinodes(antenna, positions, width, height),
+    )
     .reduce((acc, antinodes) => Object.assign(acc, antinodes), {});
-  // logMap(width, height, antennas, antinodes);
 
   const validAndUniqueAntinodes = new Set<string>();
   Object.values(antinodes)
     .flatMap((antinodes) => antinodes)
-    .filter((position) => {
-      if (
-        position[0] < 0 ||
-        position[0] >= width ||
-        position[1] < 0 ||
-        position[1] >= height
-      )
-        return false;
-      return true;
-    })
     .forEach((position) => validAndUniqueAntinodes.add(position.join(",")));
-
   console.log(validAndUniqueAntinodes.size);
 };
 
