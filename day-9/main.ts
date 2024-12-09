@@ -112,6 +112,61 @@ const consolidate = (files: File[], freeSpace: FreeSpace[]) => {
   return data;
 };
 
+const consolidateWithWholeFiles = (files: File[], freeSpace: FreeSpace[]) => {
+  const lastFile = files.at(-1)!;
+  const maxSize = lastFile.startIndex + lastFile.size;
+
+  const fillFiles: File[] = [];
+
+  for (let i = files.length - 1; i >= 0; --i) {
+    const file = files[i];
+    const spaceIndex = freeSpace.findIndex(
+      (space) => space.size >= file.size && space.startIndex < file.startIndex,
+    );
+
+    if (spaceIndex > -1) {
+      const space = freeSpace[spaceIndex];
+      files.splice(i, 1);
+      if (space.size === file.size) {
+        fillFiles.push({ ...file, startIndex: space.startIndex });
+        space.size = 0;
+      } else {
+        const remaining = space.size - file.size;
+        fillFiles.push({ ...file, startIndex: space.startIndex });
+        space.size = remaining;
+        space.startIndex += file.size;
+      }
+    }
+  }
+
+  fillFiles.sort((a, b) => a.startIndex - b.startIndex);
+
+  const data: number[] = [];
+
+  let fileIndex = 0;
+  let spaceIndex = 0;
+  let index = 0;
+  while (index < maxSize) {
+    const file = files[fileIndex];
+    const space = fillFiles[spaceIndex];
+
+    if (file && file.startIndex === index) {
+      data.push(...Array(file.size).fill(file.id));
+      fileIndex += 1;
+      index += file.size;
+    } else if (space && space.startIndex === index) {
+      data.push(...Array(space.size).fill(space.id));
+      spaceIndex += 1;
+      index += space.size;
+    } else {
+      index += 1;
+      data.push(0);
+    }
+  }
+
+  return data;
+};
+
 const checksum = (data: number[]) => {
   let sum = 0;
   for (let i = 0; i < data.length; i++) {
@@ -123,7 +178,8 @@ const checksum = (data: number[]) => {
 const main = () => {
   const data = readFile(process.argv[2]);
   const { files, freeSpace } = calculateFiles(data);
-  const consolidatedData = consolidate(files, freeSpace);
+  // const consolidatedData = consolidate(files, freeSpace);
+  const consolidatedData = consolidateWithWholeFiles(files, freeSpace);
   const result = checksum(consolidatedData);
   console.log(result);
 };
