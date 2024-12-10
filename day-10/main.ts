@@ -39,7 +39,7 @@ const findTrailheads = (map: number[][], startPosition: [number, number]) => {
     { value: 0, path: [[startPosition[0], startPosition[1]]] },
   ];
 
-  const foundHeads: Set<string> = new Set();
+  // const foundHeads: Set<string> = new Set();
 
   const results: Trail[] = [];
 
@@ -47,13 +47,13 @@ const findTrailheads = (map: number[][], startPosition: [number, number]) => {
     const trail = trails.pop()!;
 
     if (trail.value === 9) {
-      const hash = trail.path.at(-1)!.join(",");
-      if (foundHeads.has(hash)) {
-        continue;
-      }
+      // const hash = trail.path.at(-1)!.join(",");
+      // if (foundHeads.has(hash)) {
+      //   continue;
+      // }
 
       results.push(trail);
-      foundHeads.add(hash);
+      // foundHeads.add(hash);
       continue;
     }
 
