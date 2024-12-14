@@ -56,13 +56,17 @@ const solveGame = (game: Game): Solution => {
 
 const main = () => {
   const games = readFile(process.argv[2]);
-  const solutions = games.map(solveGame);
+  const partTwoGames = games.map<Game>((game) => ({
+    ...game,
+    prize: [game.prize[0] + 10000000000000, game.prize[1] + 10000000000000],
+  }));
+  const solutions = partTwoGames.map(solveGame);
   const validSolutions = solutions.filter(
     ({ a, b }) =>
       Number.isInteger(a) &&
       Number.isInteger(b) &&
-      a <= 100 &&
-      b <= 100 &&
+      // a <= 100 &&
+      // b <= 100 &&
       a >= 0 &&
       b >= 0,
   );
