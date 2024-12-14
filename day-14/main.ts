@@ -50,40 +50,104 @@ const simulateRobot = (robot: Robot, limits: Vector, steps: number) => {
   return robot;
 };
 
-const main = () => {
+const drawRobots = (robots: Robot[], limits: Vector) => {
+  const robotPositions: Record<string, number> = {};
+  robots.forEach((robot) => {
+    const hash = robot.position.join(",");
+    if (robotPositions[hash]) robotPositions[hash]++;
+    else robotPositions[hash] = 1;
+  });
+
+  for (let y = 0; y < limits[1]; ++y) {
+    let line = "";
+    for (let x = 0; x < limits[0]; ++x) {
+      if (robotPositions[x + "," + y]) line += "X";
+      else line += " ";
+    }
+
+    console.log(line);
+  }
+};
+
+const chekForLine = (robots: Robot[], limits: Vector) => {
+  const robotPositions: Record<string, number> = {};
+  robots.forEach((robot) => {
+    const hash = robot.position.join(",");
+    if (robotPositions[hash]) robotPositions[hash]++;
+    else robotPositions[hash] = 1;
+  });
+
+  for (let y = 0; y < limits[1]; ++y) {
+    let inALine = 0;
+    for (let x = 0; x < limits[0]; ++x) {
+      if (robotPositions[x + "," + y]) {
+        inALine++;
+      } else {
+        inALine = 0;
+      }
+
+      if (inALine > 20) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+};
+
+const waitForKeyPress = () => {
+  return new Promise((resolve) => {
+    process.stdin.resume();
+    process.stdin.once("data", (data) => {
+      process.stdin.pause();
+      resolve(data.toString());
+    });
+  });
+};
+
+const main = async () => {
   const limits: Vector = [101, 103];
   const center: Vector = [(limits[0] - 1) / 2, (limits[1] - 1) / 2];
   const seconds = 100;
   const robots = readFile(process.argv[2]);
 
-  robots.forEach((robot) => simulateRobot(robot, limits, seconds));
-
-  const quadrants = {
-    topLeft: 0,
-    topRight: 0,
-    bottomLeft: 0,
-    bottomRight: 0,
-  };
-
-  robots.forEach((robot) => {
-    if (robot.position[0] < center[0] && robot.position[1] < center[1]) {
-      quadrants.topLeft++;
-    } else if (robot.position[0] < center[0] && robot.position[1] > center[1]) {
-      quadrants.bottomLeft++;
-    } else if (robot.position[0] > center[0] && robot.position[1] < center[1]) {
-      quadrants.topRight++;
-    } else if (robot.position[0] > center[0] && robot.position[1] > center[1]) {
-      quadrants.bottomRight++;
+  let i = 1;
+  while (i < 10000) {
+    // await waitForKeyPress();
+    robots.forEach((robot) => simulateRobot(robot, limits, 1));
+    if (chekForLine(robots, limits)) {
+      console.log("Seconds elapsed", i);
+      drawRobots(robots, limits);
     }
-  });
+    i++;
+  }
+
+  // const quadrants = {
+  //   topLeft: 0,
+  //   topRight: 0,
+  //   bottomLeft: 0,
+  //   bottomRight: 0,
+  // };
+  //
+  // robots.forEach((robot) => {
+  //   if (robot.position[0] < center[0] && robot.position[1] < center[1]) {
+  //     quadrants.topLeft++;
+  //   } else if (robot.position[0] < center[0] && robot.position[1] > center[1]) {
+  //     quadrants.bottomLeft++;
+  //   } else if (robot.position[0] > center[0] && robot.position[1] < center[1]) {
+  //     quadrants.topRight++;
+  //   } else if (robot.position[0] > center[0] && robot.position[1] > center[1]) {
+  //     quadrants.bottomRight++;
+  //   }
+  // });
 
   // console.log(quadrants);
-  const result =
-    quadrants.topLeft *
-    quadrants.topRight *
-    quadrants.bottomLeft *
-    quadrants.bottomRight;
-  console.log(result);
+  // const result =
+  //   quadrants.topLeft *
+  //   quadrants.topRight *
+  //   quadrants.bottomLeft *
+  //   quadrants.bottomRight;
+  // console.log(result);
 };
 
 main();
