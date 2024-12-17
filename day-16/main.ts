@@ -55,7 +55,7 @@ const getDirectionChar = (direction: Direction): string => {
 };
 
 const hashNode = (node: Node): string => {
-  return `${node.position[0]},${node.position[1]}:${node.fromDirection}`;
+  return `${node.position[0]},${node.position[1]}:${node.fromDirection}:${node.cost}`;
 };
 
 const hashPosition = (node: Node): string => {
@@ -115,6 +115,7 @@ const createNodes = (map: string[]) => {
     }
 
     const allowedDirections = getAllowedDirections(node.fromDirection);
+
     for (const direction of allowedDirections) {
       const checkPosition = add(node.position, directions[direction]);
 
@@ -131,12 +132,11 @@ const createNodes = (map: string[]) => {
           nodes: [],
         };
 
-        if (char === ".") {
-          nodes.push(newNode);
-          // const hash = hashNode(newNode);
-          // if (foundNodes.has(hash)) {
-          //   node.nodes.push(foundNodes.get(hash)!);
-          // }
+        nodes.push(newNode);
+        const hash = hashNode(newNode);
+        if (foundNodes.has(hash)) {
+          node.nodes.push(foundNodes.get(hash)!);
+          continue;
         }
 
         node.nodes.push(newNode);
@@ -145,6 +145,14 @@ const createNodes = (map: string[]) => {
 
     resultNodes.push(node);
   }
+
+  // resultNodes.map((node) =>
+  //   console.log(
+  //     hashNode(node),
+  //     "->",
+  //     node.nodes.map((n) => `${hashNode(n)} - ${n.cost}`),
+  //   ),
+  // );
 
   return { nodes: resultNodes, start, end };
 };
@@ -173,11 +181,12 @@ const shortestPath = (node: Node, end: Vector, map: string[]) => {
         cost: node.cost + nextNode.cost,
         node: nextNode,
       };
-      nodes.push(newNode);
 
       const hash = hashNode(nextNode);
       if (!visited[hash] || visited[hash].cost > newNode.cost) {
         visited[hash] = newNode;
+        nodes.push(newNode);
+        // drawPath(map, newNode);
       }
     });
   }
@@ -214,7 +223,7 @@ const main = async () => {
     (node) => node.position[0] === start[0] && node.position[1] === start[1],
   )!;
   const endNode = shortestPath(startNode, end, lines);
-  drawPath(lines, endNode!);
+  // drawPath(lines, endNode!);
   console.log(endNode!.cost);
 };
 
