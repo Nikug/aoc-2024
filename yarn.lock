@@ -19,6 +19,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/heap@npm:^0":
+  version: 0.2.34
+  resolution: "@types/heap@npm:0.2.34"
+  checksum: 10/cd938238221fe52f5f7355ac5b09f220511e8013f04694c041f4bcb31678798d14883a290f97309867052fd49b081a74c2afa9121c516eb5bacbe0a91800025d
+  languageName: node
+  linkType: hard
+
 "@types/node@npm:^22.10.1":
   version: 22.10.1
   resolution: "@types/node@npm:22.10.1"
@@ -32,7 +39,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "advent-of-code-2024@workspace:."
   dependencies:
+    "@types/heap": "npm:^0"
     "@types/node": "npm:^22.10.1"
+    heap: "npm:^0.2.7"
     tsm: "npm:^2.3.0"
     typescript: "npm:^5.7.2"
   languageName: unknown
@@ -252,6 +261,13 @@ __metadata:
   bin:
     esbuild: bin/esbuild
   checksum: 10/8cf0b134b4f3d623b35f874ac97de7b7bd9d0184717f298a226d607dcfbcd029be438c1d0d60804944e8486604833de3c0b8ddd5eb3598a5ee70f8121ad50aee
+  languageName: node
+  linkType: hard
+
+"heap@npm:^0.2.7":
+  version: 0.2.7
+  resolution: "heap@npm:0.2.7"
+  checksum: 10/6374f6510af79bf47f2cfcee265bf608e6ed2b2694875974d1cb5654ddc98af05347dcf3a42ee9a7de318b576022d6f4d00fe06fa65a4a65c4c60638375eabfe
   languageName: node
   linkType: hard
 

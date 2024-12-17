@@ -3,8 +3,12 @@
   "packageManager": "yarn@4.5.3",
   "type": "module",
   "devDependencies": {
+    "@types/heap": "^0",
     "@types/node": "^22.10.1",
     "tsm": "^2.3.0",
     "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "heap": "^0.2.7"
   }
 }
