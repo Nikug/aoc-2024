@@ -75,6 +75,90 @@ const readFile = (filename: string): string[] => {
   return lines;
 };
 
+const shortestPath2 = (map: string[]) => {
+  const height = map.length;
+  const width = map[0].length;
+  let start: Vector = [0, 0];
+  let end: Vector = [0, 0];
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      if (map[y][x] === "S") {
+        start = [x, y];
+      } else if (map[y][x] === "E") {
+        end = [x, y];
+      }
+    }
+  }
+
+  const startNode: VisitedNode = {
+    node: {
+      nodes: [],
+      position: start,
+      fromDirection: "right",
+      cost: 0,
+    },
+    previous: null,
+    cost: 0,
+  };
+
+  const visited: Record<string, VisitedNode> = {
+    [hashNode(startNode.node)]: startNode,
+  };
+
+  let endNode: VisitedNode | null = null;
+  const allPaths: VisitedNode[] = [];
+
+  const nodes: Heap<VisitedNode> = new Heap((a, b) => a.cost - b.cost);
+  nodes.push(startNode);
+  while (nodes.size() > 0) {
+    const node = nodes.pop()!;
+
+    if (node.node.position[0] === end[0] && node.node.position[1] === end[1]) {
+      if (!endNode || node.cost <= endNode.cost) {
+        console.log("found end", node!.cost);
+        endNode = node;
+        allPaths.push({ ...node });
+      }
+    }
+
+    const allowedDirections = getAllowedDirections(node.node.fromDirection);
+
+    for (const direction of allowedDirections) {
+      const checkPosition = add(node.node.position, directions[direction]);
+      const checkChar = map[checkPosition[1]][checkPosition[0]];
+
+      if (checkChar === "#") {
+        continue;
+      }
+
+      const nextNode: Node = {
+        cost: direction === node.node.fromDirection ? 1 : 1001,
+        nodes: [],
+        fromDirection: direction,
+        position: checkPosition,
+      };
+
+      const newNode: VisitedNode = {
+        previous: { ...node },
+        cost: node.cost + nextNode.cost,
+        node: nextNode,
+      };
+
+      const hash = hashNode(nextNode);
+      if (!visited[hash]) {
+        visited[hash] = newNode;
+        // drawPath(map, newNode);
+        nodes.push(newNode);
+      } else if (visited[hash].cost >= newNode.cost) {
+        visited[hash] = newNode;
+        nodes.push(newNode);
+      }
+    }
+  }
+
+  return { endNode, allPaths };
+};
+
 const createNodes = (map: string[]) => {
   const height = map.length;
   const width = map[0].length;
@@ -163,6 +247,7 @@ const shortestPath = (node: Node, end: Vector, map: string[]) => {
   };
 
   let endNode: VisitedNode | null = null;
+  const allPaths: VisitedNode[] = [];
 
   const nodes: Heap<VisitedNode> = new Heap((a, b) => a.cost - b.cost);
   nodes.push({ node, previous: null, cost: 0 });
@@ -170,8 +255,10 @@ const shortestPath = (node: Node, end: Vector, map: string[]) => {
     const node = nodes.pop()!;
 
     if (node.node.position[0] === end[0] && node.node.position[1] === end[1]) {
-      if (!endNode || node.cost < endNode.cost) {
+      if (!endNode || node.cost <= endNode.cost) {
+        console.log("found end", node!.cost);
         endNode = node;
+        allPaths.push({ ...node });
       }
     }
 
@@ -183,15 +270,18 @@ const shortestPath = (node: Node, end: Vector, map: string[]) => {
       };
 
       const hash = hashNode(nextNode);
-      if (!visited[hash] || visited[hash].cost > newNode.cost) {
+      if (!visited[hash]) {
+        visited[hash] = newNode;
+        // drawPath(map, newNode);
+        nodes.push(newNode);
+      } else if (visited[hash].cost >= newNode.cost) {
         visited[hash] = newNode;
         nodes.push(newNode);
-        // drawPath(map, newNode);
       }
     });
   }
 
-  return endNode;
+  return { endNode, allPaths };
 };
 
 const drawPath = (map: string[], node: VisitedNode) => {
@@ -214,6 +304,21 @@ const drawPath = (map: string[], node: VisitedNode) => {
 
     console.log(line);
   }
+  console.log();
+};
+
+const countUniqueTiles = (paths: VisitedNode[]) => {
+  const tiles = new Set<string>();
+  const previous = [...paths];
+  while (previous.length > 0) {
+    const path = previous.pop()!;
+    tiles.add(hashPosition(path.node));
+    if (path.previous) {
+      previous.push(path.previous);
+    }
+  }
+
+  return tiles.size;
 };
 
 const main = async () => {
@@ -222,9 +327,14 @@ const main = async () => {
   const startNode = nodes.find(
     (node) => node.position[0] === start[0] && node.position[1] === start[1],
   )!;
-  const endNode = shortestPath(startNode, end, lines);
+  // const { endNode, allPaths } = shortestPath(startNode, end, lines);
   // drawPath(lines, endNode!);
-  console.log(endNode!.cost);
+  // console.log(endNode!.cost);
+
+  // allPaths.forEach((path) => drawPath(lines, path));
+  const { endNode, allPaths } = shortestPath2(lines);
+  const result = countUniqueTiles(allPaths);
+  console.log(result);
 };
 
 main();
