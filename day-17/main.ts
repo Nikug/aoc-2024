@@ -18,6 +18,7 @@ class Computer {
 
   run() {
     while (this.pointer < this.buffer.length) {
+      // console.log(this.b);
       const operation = this.buffer[this.pointer];
       const operand = this.buffer[this.pointer + 1];
 
@@ -68,7 +69,7 @@ class Computer {
   }
 
   private adv(_operation: number, operand: number) {
-    this.a = Math.floor(this.a / 2 ** this.comboValue(operand));
+    this.a = Math.trunc(this.a / 2 ** this.comboValue(operand));
   }
 
   private bxl(_operation: number, operand: number) {
@@ -91,7 +92,7 @@ class Computer {
   }
 
   private out(_operation: number, operand: number) {
-    this.outBuffer.push(this.comboValue(operand) % 8);
+    this.outBuffer.push(Math.abs(this.comboValue(operand) % 8));
   }
 
   private bdv(_operation: number, operand: number) {
@@ -130,11 +131,214 @@ const readFile = (filename: string) => {
   return { a, b, c, input };
 };
 
+const checkSomeNumbers = () => {
+  for (let i = 0; i < 2 ** 8; i++) {
+    let a = i;
+    let line: number[] = [];
+    while (a > 0) {
+      let b = a % 8 ^ 2;
+      b = (b ^ (a >> b) ^ 3) % 8;
+      line.push(b);
+      a = a >> 3;
+    }
+    console.log("A:", i, "B:", line);
+  }
+};
+
+const getIncorrectIndex = (a: number[], b: number[]) => {
+  for (let i = a.length - 1; i >= 0; i--) {
+    if (a[i] !== b[i]) {
+      return a.length - 1 - i;
+    }
+  }
+  return -1;
+};
+
+const getIncorrectIndex2 = (a: number[], b: number[]) => {
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) {
+      return i;
+    }
+  }
+  return -1;
+};
+
+const getIncorrectIndex3 = (a: number[], b: number[]) => {
+  for (let i = a.length - 1; i >= 0; i--) {
+    if (a[i] !== b[i]) {
+      return i;
+    }
+  }
+  return -1;
+};
+
+const calculateCorrectInput = (target: number[]) => {
+  let input = "1000000000000000".split("").map((value) => Number(value));
+  let index = 0;
+  while (true) {
+    // console.log("running");
+    const computer = new Computer(Number("0o" + input.join("")), 0, 0, target);
+    computer.run();
+    const output = computer.outBuffer;
+    index = getIncorrectIndex(output, target);
+
+    if (index === -1) {
+      break;
+    }
+
+    if (index >= 16) {
+      index = 0;
+    }
+
+    input[index] += 1;
+    while (input[index] > 7) {
+      input[index] = 0;
+      index -= 1;
+      input[index] += 1;
+    }
+
+    // console.log(input.join(""));
+  }
+
+  console.log(input);
+};
+
+const findA = (value: number[], index: number, target: number[]) => {
+  if (index >= 16) return false;
+
+  const simulate = (values: number[]) => {
+    const computerInput = Number(`0o${values.join("")}`);
+    const computer = new Computer(computerInput, 0, 0, target);
+    computer.run();
+    return computer.outBuffer;
+  };
+
+  for (let i = 0; i < 8; i++) {
+    for (let j = 0; j < 8; j++) {
+      const newValue = value.toSpliced(value.length - index - 1, 2, i, j);
+      const result = simulate(newValue);
+
+      console.log(newValue.join(""), result.join(""));
+
+      let diffIndex = getIncorrectIndex2(result, target);
+      console.log(diffIndex);
+      if (diffIndex === -1) {
+        console.log("result", newValue);
+      }
+
+      if (diffIndex % 2 === 1) {
+        diffIndex -= 1;
+      }
+
+      if (diffIndex > index) {
+        const result = findA(newValue, diffIndex, target);
+        if (result) return true;
+      }
+    }
+  }
+
+  return false;
+};
+
+const findA2 = (target: number[]) => {
+  const simulate = (value: number) => {
+    const computer = new Computer(value, 0, 0, target);
+    computer.run();
+    return computer.outBuffer;
+  };
+
+  let a = 0;
+  let index = target.length - 1;
+  while (true) {
+    const result = simulate(a);
+    const diffIndex = getIncorrectIndex3(result, target);
+
+    if (diffIndex === -1 && target.length === result.length) {
+      break;
+    }
+
+    if (diffIndex < index) {
+      a *= 8;
+      index -= 1;
+    } else {
+      a += 1;
+    }
+  }
+
+  console.log(a);
+  const computer = new Computer(a, 0, 0, target);
+  computer.run();
+  const out = computer.outBuffer;
+  console.log(out.join(","), "=", target.join(","));
+};
+
+const simulate = (value: number, input: number[]) => {
+  const computer = new Computer(value, 0, 0, input);
+  computer.run();
+  return computer.outBuffer;
+};
+
+const findA3 = (
+  target: number[],
+  index: number,
+  value: number,
+): number | null => {
+  for (let i = 0; i < 8; i++) {
+    const result = simulate(value * 8 + i, target);
+    const diffIndex = getIncorrectIndex2(result, target.slice(index));
+    if (diffIndex === -1) {
+      if (index === 0) {
+        return value * 8 + i;
+      }
+      const newResult = findA3(target, index - 1, value * 8 + i);
+      if (newResult) return newResult;
+    }
+  }
+
+  return null;
+};
+
+const findA4 = (program: number[], target: number[]): number => {
+  var aStart = target.length === 1 ? 0 : 8 * findA4(program, target.slice(1));
+
+  while (true) {
+    const result = simulate(aStart, program);
+    const diffIndex = getIncorrectIndex2(result, target);
+    if (diffIndex === -1) break;
+    aStart++;
+  }
+
+  return aStart;
+};
+
 const main = async () => {
   const program = readFile(process.argv[2]);
-  const computer = new Computer(program.a, program.b, program.c, program.input);
-  computer.run();
-  console.log(computer.outBuffer.join(","));
+  // const target = program.input.join("");
+  // findA2(program.input);
+  const result = findA3(program.input, program.input.length - 1, 0);
+  console.log(result);
+  // const result = findA4(program.input, program.input);
+  // console.log(result);
+
+  // const initial = Array(16).fill(0);
+  // initial[0] = 1;
+  // findA(initial, 0, program.input);
+  // calculateCorrectInput(program.input);
+
+  // const a = 35_184_372_088_832;
+  // const a = 218_474_976_710_656;
+  // const a = 27575648;
+  // const a = 0o1000000000000000;
+  // const a = 36067;
+  //
+
+  // const a = 0o1000000000000000;
+  // const computer = new Computer(a, program.b, program.c, program.input);
+  // computer.run();
+  // const result = computer.outBuffer.join(",");
+  //
+  // console.log(result);
 };
 
 main();
+// checkSomeNumbers();
