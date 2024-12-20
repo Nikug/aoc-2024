@@ -200,7 +200,8 @@ const calculateCorrectInput = (target: number[]) => {
     // console.log(input.join(""));
   }
 
-  console.log(input);
+  // console.log(input);
+  console.log(Number(`0o${input.join("")}`));
 };
 
 const findA = (value: number[], index: number, target: number[]) => {
@@ -323,7 +324,7 @@ const main = async () => {
   // const initial = Array(16).fill(0);
   // initial[0] = 1;
   // findA(initial, 0, program.input);
-  // calculateCorrectInput(program.input);
+  calculateCorrectInput(program.input);
 
   // const a = 35_184_372_088_832;
   // const a = 218_474_976_710_656;
