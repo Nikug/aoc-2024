@@ -118,6 +118,30 @@ const drawMap = (node: Node, blocks: Record<string, Vector>, width: number, heig
   }
 }
 
+const canFindPath = (start: Vector, end: Vector, height: number, width: number, blocks: Vector[]) => {
+  return (value: number) => {
+    const blockRecord: Record<string, Vector> = {}
+    blocks.forEach((block, i) => i < value ? blockRecord[hash(block)] = block : null);
+    return shortestPath(start, end, height, width, blockRecord) != null
+  }
+}
+
+const binarySearch = (start: number, end: number, checkFunction: ((value: number) => boolean)) => {
+  while (true) {
+    const middle = start + Math.floor((end - start) / 2)
+
+    if (middle === start || middle === end) {
+      return middle
+    }
+
+    if (checkFunction(middle)) {
+      start = middle
+    } else {
+      end = middle
+    }
+  }
+}
+
 const main = async () => {
   const blocks = readFile(process.argv[2]);
   const isTest = process.argv[2].includes("test")
@@ -126,14 +150,18 @@ const main = async () => {
     ? { start: [0, 0] as Vector, end: [6, 6] as Vector, width: 6, height: 6, blocksToCheck: 12, }
     : { start: [0, 0] as Vector, end: [70, 70] as Vector, width: 70, height: 70, blocksToCheck: 1024, }
 
-  const blockRecord: Record<string, Vector> = {}
-  blocks.forEach((block, i) => i < setup.blocksToCheck ? blockRecord[hash(block)] = block : null);
+  // const blockRecord: Record<string, Vector> = {}
+  // blocks.forEach((block, i) => i < setup.blocksToCheck ? blockRecord[hash(block)] = block : null);
+  //
+  // const endNode = shortestPath(setup.start, setup.end, setup.height, setup.width, blockRecord)
+  //
+  // drawMap(endNode!, blockRecord, setup.width, setup.height)
 
-  const endNode = shortestPath(setup.start, setup.end, setup.height, setup.width, blockRecord)
+  const check = canFindPath(setup.start, setup.end, setup.height, setup.width, blocks)
+  const firstBlocking = binarySearch(setup.blocksToCheck, blocks.length, check)
+  const result = blocks[firstBlocking]
 
-  drawMap(endNode!, blockRecord, setup.width, setup.height)
-
-  console.log(endNode?.cost);
+  console.log(result);
 };
 
 main();
