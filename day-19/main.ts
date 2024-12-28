@@ -73,6 +73,29 @@ const solveArrangementAllPossibilities = (arrangement: string, start: number, cu
   return null
 }
 
+const solveAllPossibilities = (arrangement: string, solution: string, towels: Record<string, number>, solutions: number): number => {
+  if (arrangement.length === 0) {
+    return 1;
+  }
+
+  const towelsToCheck = Object.keys(towels)
+  for (const towel of towelsToCheck) {
+    if (arrangement.startsWith(towel)) {
+      solution += towel
+      if (!towels[solution]) {
+        towels[solution] = 1;
+      }
+
+      const solved = solveAllPossibilities(arrangement.slice(towel.length), solution, towels, solutions)
+      if (solved) {
+        towels[towel]++
+      }
+    }
+  }
+
+  return 0;
+}
+
 const solveArrangements = (towels: string[], arrangements: string[]) => {
   const solutions: Record<string, string> = {}
   towels.forEach(towel => solutions[towel] = towel)
@@ -94,10 +117,42 @@ const solveArrangements = (towels: string[], arrangements: string[]) => {
   return results
 }
 
+const getUniqueTowels = (towels: string[]) => {
+  const unique: string[] = [];
+  for (let i = 0; i < towels.length; ++i) {
+    const others = towels.toSpliced(i, 1)
+    const solutions: Record<string, string> = {}
+    others.forEach(towel => solutions[towel] = towel)
+    const result = solveArrangement(towels[i], 0, "", solutions)
+    if (!result) unique.push(towels[i])
+  }
+
+  return unique;
+}
+
+const getUniqueTowelLayers = (towels: string[]) => {
+  let copy = [...towels]
+  const result: string[][] = []
+  while (copy.length > 0) {
+    const unique = getUniqueTowels(copy)
+    result.push(unique)
+    const set = new Set(unique);
+    copy = copy.filter(towel => !set.has(towel))
+  }
+
+  return result;
+}
+
 const main = async () => {
   const { towels, arrangements } = readFile(process.argv[2]);
-  const result = solveArrangements(towels, arrangements)
-  console.log(result.length)
+
+  const towelMap: Record<string, number> = {}
+  towels.forEach(towel => towelMap[towel] = 1)
+
+  for (const arrangement of arrangements) {
+    const result = solveAllPossibilities(arrangement, "", towelMap, 0)
+    console.log(arrangement, result, towelMap)
+  }
 };
 
 main();
