@@ -67,6 +67,9 @@ const generateDirectionInputs = (schema: string[][]): InputMap => {
   return inputs;
 };
 
+// Shortest path probably cannot be run before-hand
+// Instead it should be run dynamically to determine the shortest path that factors in
+// the inputs in higher levels, because those can affect the optimal shortest path
 const shortestPath = (
   map: string[][],
   start: Vector,
@@ -91,8 +94,11 @@ const shortestPath = (
       const char = map[nextPosition[1]][nextPosition[0]];
       if (char === " ") continue;
 
+      const previousDirection = node.path.at(-1);
+      const newCost = previousDirection === direction ? 1 : 1.5;
+
       const nextNode: Node = {
-        cost: node.cost + 1,
+        cost: node.cost + newCost,
         vector: nextPosition,
         path: [...node.path, direction],
       };
@@ -101,6 +107,36 @@ const shortestPath = (
   }
 
   return [];
+};
+
+const codeToInputs = (code: string, inputMap: InputMap) => {
+  let result = "";
+  let previousKey = "A";
+  for (let i = 0; i < code.length; ++i) {
+    const char = code[i];
+
+    if (char === previousKey) {
+      result += "A";
+      continue;
+    }
+
+    const input = inputMap[previousKey][char];
+
+    if (input === undefined) {
+      console.log(inputMap);
+      throw new Error(`No input found: previous=${previousKey}, next=${char}`);
+    }
+
+    result += input + "A";
+    previousKey = char;
+  }
+
+  return result;
+};
+
+const calculateComplexity = (code: string, steps: string) => {
+  // console.log(code, parseInt(code.slice(0, -1)), steps.length);
+  return steps.length * parseInt(code.slice(0, -1));
 };
 
 const main = () => {
@@ -116,8 +152,24 @@ const main = () => {
     ["<", "v", ">"],
   ]);
 
+  let result = 0;
   console.log(numberPad);
   console.log(directionPad);
+  for (const code of codes) {
+    const numberPadSteps = codeToInputs(code, numberPad);
+
+    const firstDirectionPadSteps = codeToInputs(numberPadSteps, directionPad);
+
+    const secondDirectionPadSteps = codeToInputs(
+      firstDirectionPadSteps,
+      directionPad,
+    );
+
+    const complexity = calculateComplexity(code, secondDirectionPadSteps);
+    result += complexity;
+  }
+
+  console.log(result);
 };
 
 main();
