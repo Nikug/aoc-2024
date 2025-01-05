@@ -13,8 +13,16 @@ const add = (a: Vector, b: Vector): Vector => {
   return [a[0] + b[0], a[1] + b[1]];
 };
 
+const distance = (a: Vector, b: Vector): number => {
+  return Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]);
+};
+
 const hash = (vector: Vector) => {
   return `${vector[0]},${vector[1]}`;
+};
+
+const hashCheat = (start: Vector, end: Vector) => {
+  return `${start[0]},${start[1]}:${end[0]},${end[1]}`;
 };
 
 const isInBounds = (vector: Vector, height: number, width: number) => {
@@ -138,13 +146,50 @@ const sumCheats = (groupedCheats: Record<number, number>): number => {
   return result;
 };
 
+const findLongCheats = (route: Vector[]) => {
+  const routeHashes: Record<string, number> = {};
+  route.forEach((point, i) => (routeHashes[hash(point)] = i));
+  const maxCheatLength = 20;
+  const minimumSave = 50; // 50 for test, 100 for real input
+
+  const cheats: Record<string, { vectors: Vector[]; saved: number }> = {};
+
+  for (let start = 0; start < route.length - minimumSave; ++start) {
+    for (let end = start + minimumSave; end < route.length; ++end) {
+      const dist = distance(route[start], route[end]);
+
+      if (dist > maxCheatLength) continue;
+
+      const saved = end - start - dist;
+      if (saved > 0) {
+        const cheatHash = hashCheat(route[start], route[end]);
+        if (cheats[cheatHash]) continue;
+        cheats[cheatHash] = { vectors: [route[start], route[end]], saved };
+      }
+    }
+  }
+
+  return cheats;
+};
+
+const printCheats = (cheats: Record<number, number>) => {
+  for (const key in cheats) {
+    const saved = parseInt(key);
+    if (saved >= 50) {
+      console.log(cheats[key], "save", saved);
+    }
+  }
+};
+
 const main = async () => {
   const lines = readFile(process.argv[2]);
   const { start } = getStartAndEnd(lines);
   const route = goThroughTrack(lines, start);
-  const cheats = findCheats(lines, route);
+  // const cheats = findCheats(lines, route);
+  const cheats = findLongCheats(route);
   const grouped = groupCheats(cheats);
   const result = sumCheats(grouped);
+
   console.log(result);
 };
 
