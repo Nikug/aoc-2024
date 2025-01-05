@@ -17,6 +17,12 @@ const hash = (vector: Vector) => {
   return `${vector[0]},${vector[1]}`;
 };
 
+const isInBounds = (vector: Vector, height: number, width: number) => {
+  return (
+    vector[0] >= 0 && vector[0] < width && vector[1] >= 0 && vector[1] < height
+  );
+};
+
 const readFile = (filename: string) => {
   const lines = fs.readFileSync(filename, "utf8").split("\n").slice(0, -1);
   return lines;
@@ -74,11 +80,72 @@ const goThroughTrack = (lines: string[], start: Vector): Vector[] => {
   return steps;
 };
 
+const findCheats = (lines: string[], route: Vector[]) => {
+  const routeHashes: Record<string, number> = {};
+  route.forEach((point, i) => (routeHashes[hash(point)] = i));
+
+  const cheats: Record<string, { vectors: Vector[]; saved: number }> = {};
+
+  for (let i = 0; i < route.length - 2; i++) {
+    const point = route[i];
+
+    for (const direction in directions) {
+      const next = add(point, directions[direction]);
+      const char = lines[next[1]][next[0]];
+
+      if (char === "#") {
+        for (const innerDirection in directions) {
+          const innerNext = add(next, directions[innerDirection]);
+          const innerNextHash = hash(innerNext);
+          const pointIndex = routeHashes[innerNextHash];
+          if (pointIndex != null) {
+            // Cheating takes two steps
+            const diff = pointIndex - i - 2;
+
+            // We have successfully cheated and saved time
+            if (diff > 0) {
+              const cheatHash = `${hash(next)}:${innerNextHash}`;
+              cheats[cheatHash] = { vectors: [next, innerNext], saved: diff };
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return cheats;
+};
+
+const groupCheats = (
+  cheats: Record<string, { vectors: Vector[]; saved: number }>,
+) => {
+  const grouped: Record<number, number> = {};
+  for (const cheat in cheats) {
+    const value = cheats[cheat];
+    grouped[value.saved] = (grouped[value.saved] || 0) + 1;
+  }
+
+  return grouped;
+};
+
+const sumCheats = (groupedCheats: Record<number, number>): number => {
+  let result = 0;
+  for (const key in groupedCheats) {
+    const saved = parseInt(key);
+    if (saved >= 100) result += groupedCheats[key];
+  }
+
+  return result;
+};
+
 const main = async () => {
   const lines = readFile(process.argv[2]);
-  const { start, end } = getStartAndEnd(lines);
+  const { start } = getStartAndEnd(lines);
   const route = goThroughTrack(lines, start);
-  console.log(route.length);
+  const cheats = findCheats(lines, route);
+  const grouped = groupCheats(cheats);
+  const result = sumCheats(grouped);
+  console.log(result);
 };
 
 main();
