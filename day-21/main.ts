@@ -232,6 +232,77 @@ const minimumSolution = (solutions: string[]) => {
   return length;
 };
 
+const costs: Record<string, number> = {
+  "A^": 1,
+  "A<": 3,
+  Av: 2,
+  "A>": 1,
+  AA: 0,
+
+  "^A": 1,
+  "^<": 2,
+  "^v": 1,
+  "^>": 2,
+  "^^": 0,
+
+  ">A": 1,
+  "><": 2,
+  ">v": 1,
+  ">>": 0,
+  ">^": 2,
+
+  vA: 2,
+  "v<": 1,
+  vv: 0,
+  "v>": 1,
+  "v^": 1,
+
+  "<A": 3,
+  "<<": 0,
+  "<v": 1,
+  "<>": 2,
+  "<^": 2,
+};
+
+const cost = (solution: string) => {
+  let total = 0;
+  for (let i = 0; i < solution.length - 1; i++) {
+    const part = solution[i] + solution[i + 1];
+    total += costs[part];
+  }
+
+  return total;
+};
+
+const findBestCost = (solutions: string[]) => {
+  let bestSolution: string | null = null;
+  let bestCost = Infinity;
+
+  for (const solution of solutions) {
+    const currentCost = cost(solution);
+    if (currentCost < bestCost) {
+      bestCost = currentCost;
+      bestSolution = solution;
+    }
+  }
+
+  return bestSolution;
+};
+
+const generateBestDirectionInputs = (inputMap: InputMap) => {
+  const result: InputMap = {};
+  for (const first in inputMap) {
+    result[first] = {};
+    for (const second in inputMap[first]) {
+      const allInputs = inputMap[first][second];
+      const bestInput = findBestCost(allInputs);
+      result[first][second] = [bestInput!];
+    }
+  }
+
+  return result;
+};
+
 const main = () => {
   const codes = readFile(process.argv[2]);
 
@@ -249,14 +320,27 @@ const main = () => {
 
   const numbers = generateDirectionInputs(numberpad);
   const directions = generateDirectionInputs(directionPad);
+  const bestDirections = generateBestDirectionInputs(directions);
+
+  const robotCount = 2;
 
   let result = 0;
   for (const code of codes) {
-    const result1 = solve(code, numbers);
-    const result2 = result1.flatMap((code) => solve(code, directions));
-    const result3 = result2.flatMap((code) => solve(code, directions));
-    const min = minimumSolution(result3);
-    const complexity = min * parseInt(code.slice(0, -1));
+    let solution = solve(code, numbers);
+    for (let i = 0; i < robotCount; ++i) {
+      solution = solution.flatMap((code) => solve(code, bestDirections));
+
+      if (solution.length > 1) {
+        const bestSolution = findBestCost(solution);
+        solution = [bestSolution!];
+      }
+    }
+
+    let min = minimumSolution(solution);
+
+    const codeValue = parseInt(code.slice(0, -1));
+    const complexity = min * codeValue;
+    console.log(code, min, codeValue);
     result += complexity;
   }
 
