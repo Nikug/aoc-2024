@@ -31,17 +31,91 @@ const calculateTimes = (value: number, count: number): number => {
   return newValue;
 };
 
-const main = () => {
-  const numbers = readFile(process.argv[2]);
+const generatePriceAndChangeLists = (value: number, count: number) => {
+  const priceList: number[] = [];
+  const changeList: number[] = [];
 
-  const results: number[] = [];
-  for (const value of numbers) {
-    const result = calculateTimes(value, 2000);
-    results.push(result);
+  let newValue = value;
+  priceList.push(newValue % 10);
+
+  for (let i = 0; i < count; ++i) {
+    newValue = calculateNext(newValue);
+    priceList.push(newValue % 10);
+    changeList.push(priceList[i + 1] - priceList[i]);
   }
 
-  const sum = results.reduce((sum, value) => sum + value, 0);
-  console.log(sum);
+  return { priceList, changeList };
+};
+
+const createPriceChangeSequenceLookup = (
+  prices: number[],
+  changeList: number[],
+) => {
+  const lookup: Record<string, number> = {};
+
+  for (let i = 3; i < changeList.length; ++i) {
+    const hash = `${changeList[i - 3]},${changeList[i - 2]},${changeList[i - 1]},${changeList[i]}`;
+    if (!lookup[hash]) lookup[hash] = prices[i + 1];
+  }
+
+  return lookup;
+};
+
+const uniqueSequences = (lookups: Record<string, number>[]) => {
+  const unique = new Set<string>();
+  for (const lookup of lookups) {
+    for (const key in lookup) {
+      unique.add(key);
+    }
+  }
+
+  return Array.from(unique);
+};
+
+const sequenceValue = (sequence: string, lookups: Record<string, number>[]) => {
+  let sum = 0;
+  for (const lookup of lookups) {
+    sum += lookup[sequence] ?? 0;
+  }
+
+  return sum;
+};
+
+const findBestSequence = (
+  sequences: string[],
+  lookups: Record<string, number>[],
+) => {
+  let best = 0;
+  let bestSequence = "";
+  for (const sequence of sequences) {
+    const value = sequenceValue(sequence, lookups);
+    if (value > best) {
+      best = value;
+      bestSequence = sequence;
+    }
+  }
+
+  return { value: best, sequence: bestSequence };
+};
+
+const main = () => {
+  console.time("runtime");
+  const numbers = readFile(process.argv[2]);
+
+  const lookups: Record<string, number>[] = [];
+  for (const value of numbers) {
+    const { priceList, changeList } = generatePriceAndChangeLists(value, 2000);
+    const sequenceLookup = createPriceChangeSequenceLookup(
+      priceList,
+      changeList,
+    );
+    lookups.push(sequenceLookup);
+  }
+
+  const unique = uniqueSequences(lookups);
+  const { value, sequence } = findBestSequence(unique, lookups);
+  console.log(sequence, value);
+  console.timeEnd("runtime");
 };
 
 main();
