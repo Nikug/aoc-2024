@@ -122,6 +122,7 @@ const largestInterconnectedSet = (nodes: Record<string, Node>) => {
 };
 
 const main = () => {
+  console.time("runtime");
   const edges = readFile(process.argv[2]);
   const nodes = buildNodes(edges);
   // const sets = findSets(nodes);
@@ -129,6 +130,7 @@ const main = () => {
 
   const result = largestInterconnectedSet(nodes);
   console.log(result);
+  console.timeEnd("runtime");
 };
 
 main();
