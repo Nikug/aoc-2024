@@ -63,11 +63,72 @@ const findSets = (nodes: Record<string, Node>) => {
   return foundSets;
 };
 
+const longestString = (strings: string[]) => {
+  let longest = "";
+  for (const string of strings) {
+    if (string.length > longest.length) longest = string;
+  }
+
+  return longest;
+};
+
+const verifyInterconnectivity = (set: string, nodes: Record<string, Node>) => {
+  const ids = set.split(",");
+
+  for (const id of ids) {
+    const node = nodes[id];
+    for (const id2 of ids) {
+      if (id2 === id) continue;
+      if (!node.nodes.some((n) => n.id === id2)) return false;
+    }
+  }
+
+  return true;
+};
+
+const largestInterconnectedSet = (nodes: Record<string, Node>) => {
+  const bestSets = new Set<string>();
+
+  for (const key in nodes) {
+    const node = nodes[key];
+    const targetIds = new Set<string>(node.nodes.map((child) => child.id));
+    targetIds.add(node.id);
+    const results = new Set<string>();
+
+    for (const child of node.nodes) {
+      const matchingTargets = child.nodes.filter((grandchild) =>
+        targetIds.has(grandchild.id),
+      );
+      matchingTargets.push(child);
+
+      const ids = matchingTargets.map((t) => t.id);
+      results.add(ids.sort().join(","));
+    }
+
+    const best = longestString([...results]);
+    bestSets.add(best);
+  }
+
+  const bestList = Array.from(bestSets);
+  let bestSet = "";
+  for (const setToCheck of bestList) {
+    if (setToCheck.length < bestSet.length) continue;
+    if (verifyInterconnectivity(setToCheck, nodes)) {
+      bestSet = setToCheck;
+    }
+  }
+
+  return bestSet;
+};
+
 const main = () => {
   const edges = readFile(process.argv[2]);
   const nodes = buildNodes(edges);
-  const sets = findSets(nodes);
-  console.log(sets.size);
+  // const sets = findSets(nodes);
+  // console.log(sets.size);
+
+  const result = largestInterconnectedSet(nodes);
+  console.log(result);
 };
 
 main();
